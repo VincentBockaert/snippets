@@ -1,0 +1,7 @@
+:filter-in error (enter)
+ctrl+r
+
+:highlight KEYWORD
+
+│2020-10-05T14:04:14.732292+00:00 haproxy01.dmz.prod.be01.uni haproxy-systemd-wrapper: [WARNING] 278/140414 (12250) : config : 'option forwardfor' ignored for proxy 'cloudstorage-sync.unifiedpost.com' a│
+│2020-10-05T14:04:14.732438+00:00 haproxy01.dmz.prod.be01.uni haproxy-systemd-wrapper: [WARNING] 278/140414 (12250) : config : 'option forwardfor' ignored for proxy 'in-mx.nomadesk.com' as it requires H│

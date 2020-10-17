@@ -1,0 +1,958 @@
+= Development Goodies
+Vincent Bockaert <bockaert.vincent1997@gmail.com>
+:numbered:
+:source-highlighter: highlight.js
+:icons: font
+:numbered:
+
+== Scripting sweetnees
+
+[source, bash]
+----
+# stdout is only the filename
+grep -l  "Cannot make a reference to a lookup list item which is inactive" /var/onea/PROD/vis/Import/Retry/*.xml | while read line; do rm $line; done
+find /var/onea/TEST/*/config/ -maxdepth 1 -name jboss-logging.xml -type f -exec sed -i 's+<!--<handler-ref name="ASYNC_ROLLBAR"/>-->+<handler-ref name="ASYNC_ROLLBAR"/>+g' "{}" \;
+find /var/onea/TEST/*/config/ -maxdepth 1 -name jboss-logging.xml -exec grep --with-filename '"ASYNC_ROLLBAR"' "{}" \;
+sudo apt install libtext-lorem-perl
+lorem 
+find . -type f -exec gpg -o "{}.gpg" -s -e -r 6F0FD3C516A9759DB75296590A46DD24709D9D84 -u 6F0FD3C516A9759DB75296590A46DD24709D9D84 "{}" \;
+----
+
+== node.js npm 
+
+=== npm global install folder
+
+[source, bash]
+----
+npm config set prefix ~/.npm-global-packages
+----
+
+== cowsay
+
+[source, bash]
+----
+sudo apt install cowsay fortune
+cowsay -f tux "Using snap node allows us to easily switch between node versions/channels"
+----
+
+== gitconfig
+
+.There is a global ~/.gitconfig (%userprofile%.gitconfig), a good starting point is something like the following.
+....
+[user]
+	name = Vincent Bockaert
+	email = bockaert.vincent1997@gmail.com
+	signingKey = B9D0C850BA1D4B733E4C64E77AE10FA5A2006814
+[gpg]
+	program = C:\\Program Files (x86)\\GnuPG\\bin\\gpg.exe
+[commit]
+	gpgSign = true
+....
+
+== SSH 
+
+=== Config file
+
+.Usually resides in the home directory: `~/.ssh/config`.
+....
+Host wsv
+	HostName 188.166.24.123
+	Port 22
+	User serveradmin
+	IdentityFile ~/.ssh/id_rsa_wsv
+
+Host hobby
+	HostName 167.71.70.18
+	Port 22
+	IdentityFile ~/.ssh/id_ed25519_hobby
+
+Host github.com
+	HostName github.com
+	Port 22
+	User git
+	IdentityFile ~/.ssh/id_ed25519_github
+
+Host git.ikdoeict.be
+	HostName git.ikdoeict.be
+	Port 22
+	User git
+	IdentityFile ~/.ssh/id_ed25519_gitlab
+
+Host ubuntudev
+	HostName 192.168.1.24
+	Port 22
+	User vincent
+	IdentityFile ~/.ssh/id_rsa_ubuntudev
+....
+
+=== Hardening SSH Server (really not necessary imho)
+
+----
+#!/bin/bash
+echo "WARNING: The following will enforce ED25519 as the algorithm"
+sudo su -
+echo "HostKeyAlgorithms ssh-ed25519" >> /etc/ssh/sshd_config
+sshd -t # tests the config
+systemctl restart sshd
+echo "WARNING: The following will enforce ED25519 as the algorithm"
+sudo su -
+echo "HostKeyAlgorithms ssh-ed25519" >> /etc/ssh/sshd_config
+sshd -t # tests the config
+systemctl restart sshd
+----
+
+=== keygen and verifying key fingerprints
+
+[source, bash]
+----
+#!/bin/bash
+ssh-keygen -t ed25519 -f $HOME/.ssh/id_ed25519 -C "vincent@ubbylap default key"
+echo $(ssh-keygen -E md5 -lf $HOME/.ssh/id_ed25519) > sshFingerprints.txt
+echo $(ssh-keygen -E sha1 -lf $HOME/.ssh/id_ed25519) >> sshFingerprints.txt
+echo $(ssh-keygen -E sha256 -lf $HOME/.ssh/id_ed25519) >> sshFingerprints.txt
+echo $(ssh-keygen -E sha512 -lf $HOME/.ssh/id_ed25519) >> sshFingerprints.txt
+# or just on the stdout
+ssh-keygen -E md5 -lf .ssh/id_rsa
+ssh-keygen -E sha1 -lf .ssh/id_rsa
+ssh-keygen -E sha256 -lf .ssh/id_rsa
+----
+
+== Timezone
+
+----
+#!/bin/bash
+timedatectl set-timezone Europe/Brussels
+systemctl restart rsyslog.service # otherwise logs like /var/log/auth.log will continue using the previous timezone (untill reboot)
+----
+
+== Arch Linux Install
+
+[source, bash]
+----
+#!/bin/sh
+
+loadkeys be-latin1
+printf "Checking if UEFI mode is enabled"
+ls /sys/firmware/efi/efivars # if the directory exists and has content than UEFI is enabled 
+
+# Connect to the internet
+echo "Checking internet connection"
+ip link
+if ping -c 4 192.168.1.1
+then
+    echo "Internet connection reached router"
+    if ping -c 4 mozilla.org
+    then
+        echo "Internet connection reached mozilla.org"
+    else
+        echo "Internet connection FAILED to reach mozilla.org"
+else
+    echo "Internet connection failed to reach router"
+fi
+
+timedatectl set-ntp true
+timedatectl set-timezone Europe/Brussels
+timedatectl status
+
+echo "Manual intervention required for disk partitioning"
+lsblk # for general overview
+# fdisk /dev/sda
+# m # gives help menu
+# d 
+# 1
+# d 
+# 2
+# make the partitions nice
+# mkfs.fat -F32 /dev/sda1 for boot partition
+# mkswap /dev/sda2 for swap partition
+# swapon /dev/sda2
+# mkfs.ext4 /dev/sda3 for root /
+# mkfs.ext4 /dev/sda4 for /home partition
+
+# mount the partitions
+# first we mount the root partition
+mount /dev/sda3 /mnt
+mkdir /mnt/boot
+mkdir /mnt/home
+mount /dev/sda1 /mnt/boot
+mount /dev/sda4 /mnt/home
+lsblk
+bootstrap your arch install
+pacstrap /mnt base base-devel linux linux-firmware vim nano zsh sudo # installs basic packages onto your hard drive, while you're still running in the USB live environment
+
+genfstab -U /mnt >> /mnt/etc/fstab # this basically tells grub where to find the OS on the hard drive. (oversimplified)
+arch-chroot /mnt # become root on the hard drive, as if you're running Arch on the hard drive (which you kinda are at this point)
+
+echo "lappy" > /etc/hostname
+echo "127.0.0.1     localhost" >> /etc/hosts
+echo "::1           localhost" >> /etc/hosts
+echo "127.0.0.1     lappy.localdomain   lappy" >> /etc/hosts
+
+pacman -S NetworkManager # DO NOT FORGET THIS, I SWEAR THIS CAN BE A REAL PAIN IN THE ASS OTHERWISE
+systemctl enable NetworkManager # has to be capitalized
+pacman -S grub efibootmgr intel-ucode # installs microcode fixes
+
+# grub config
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
+grub-mkconfig -o /boot/grub/grub.cfg
+passwd
+
+# ln -sf /usr/share/zoneinfo/Europe/Brussels /etc/localtime
+# hwclock --systohc
+# locale-gen
+# localectl set-keymap be-latin1
+
+
+
+# useradd -m -g wheel -s /usr/bin/zsh slothy
+# passwd slothy
+# edit sudoers file AKA, run 'visudo'
+
+# download and install some fonts
+# pacman -S noto-fonts # lots of fonts through a package
+
+# desktop environments
+pacman -S xfce4 xfce4-goodies xorg-init lightdm
+# pacman -Syu konsole # installs the KDE terminal emulator
+----
+
+== GPG / PGP
+
+=== Generating process
+
+[source, bash]
+----
+gpg --full-keygen # choose rsa
+gpg --expert --edit-key KEYID
+# change expire date of subkey
+key 1
+delkey 
+addkey # encrypt only
+addkey # sign only
+addkey # auth only
+save
+# make a offline backup
+gpg --armor --export-secret-key KEYID > /media/vincent/volumename
+# push the subkeys to smart card, i.e. Yubikey
+gpg --expert --edit-key KEYID
+key 1
+keytocard
+key 1
+key 2
+keytocard
+key 2
+key 3
+keytocard
+save
+# verify that the subkeys now have ">" in front of them (means the actual keys are on a smartcard)
+gpg --list-secret-keys
+
+# remove the master secret key from your keyring (otherwise why bother having all those subkeys?)
+# the following is taken from the excellent Debian guide/wiki on this: https://wiki.debian.org/Subkeys
+gpg --with-keygrip --list-key # note down the keygrip of the master key
+rm $HOME/.gnupg/private-keys-v1.d/YOURKEYGRIP.key
+# verify the removal of your master key
+gpg --list-secret-keys # output should have your master key with "sec#", meaning the secret key is not really there 
+
+# upload the keys to keyservers
+gpg --keyserver hkp://keyring.debian.org --send-key YOURMASTERKEYID
+gpg --keyserver hkp://pool.sks-keyservers.net --send-key YOURMASTERKEYID
+----
+
+=== Config file
+
+....
+keyserver hkps://keys.openpgp.org
+default-key B9D0C850BA1D4B733E4C64E77AE10FA5A2006814 # watch out since this will force the default key to be used if you dont specify the key manually
+local-user B9D0C850BA1D4B733E4C64E77AE10FA5A2006814  # watch out since this will force the default key to be used if you dont specify the key manually
+....
+
+=== Common commands
+
+[source, bash]
+----
+# check key fingerprints before importing
+gpg --with-fingerprint <keyfile>
+
+# get keys with fingerprint
+gpg --with-fingerprint --list-secret-key # or put 'with-fingerprint' in ~/.gnupg/gpg.conf
+
+
+# how to verify a imported key?
+# first receive the key --recv-key from a keyserver
+gpg --recv-key '<fingerprint>'
+# OR if you want to use a specific keyserver
+gpg --recv-key '<fingerprint>' --keyserver '<keyserver_name>'
+# download the key from another source
+# verify the fingerprint of the downloaded keyfile
+gpg --with-fingerprint <keyfile> 
+# check if the downloaded key has the same fingerprint as the one from the keyserver
+gpg --fingerprint '<fingerprint>' # will look for the key in your keyring
+# if the key is found, attempt to locally sign the key with that fingerprint
+gpg --lsign-key '<fingerprint>'
+----
+
+== NGINX Example config
+
+
+.Configuration used for schaakclublievegem.be, secured with HTTPS, includes throttling/rate-limiting the login-page to mitigate brute-force attacks.
+As well as configuration to ensure the use of HTTP/2 if possible.
+....
+# https://docs.nginx.com/nginx/admin-guide/security-controls/controlling-access-proxied-http/#limiting-the-request-rate
+
+limit_req_zone $binary_remote_addr zone=bruteforce:10m rate=2r/s;
+
+# generated with: https://ssl-config.mozilla.org/
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    return 301 https://$host$request_uri;
+}
+
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    ssl_certificate /etc/letsencrypt/live/schaakclublievegem.be/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/schaakclublievegem.be/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+    ssl_session_tickets off;
+
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    
+    # intermediate configuration, as defined by Mozilla TLS Configurator: https://ssl-config.mozilla.org/
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (ngx_http_headers_module is required) (63072000 seconds)
+    add_header Strict-Transport-Security "max-age=63072000" always;
+
+    root /var/www/html/schaakclublievegem.be;
+    index index.php index.html index.htm;
+    server_name schaakclublievegem.be;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /css/ {
+    }
+
+    location /img/ {
+    }
+
+    location /js/ {
+    }
+
+    location ~ \.php$ {
+        location ~ /login.php$ {
+            limit_req zone=bruteforce;
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+        }
+        
+	location ~ /contact.php$ {
+	    limit_req zone=bruteforce;
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+	}
+
+	location ~ /register.php$ {
+	    limit_req zone=bruteforce;
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+	}
+
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+    }
+
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+....
+
+=== nginx gotchas
+
+There is a issue with removing NGinx entries ("vhosts") but still having your dns point to your webserver.
+Or any hostname having the dns to your website, namely nginx will try to find a match and if doesn't find one, try and serve the first "listen" directive instead.
+You can solve this in multiple ways but the recommended approach is to use the `default_server` directive after a `listen` directive.
+Now doing this just on HTTP won't be enough, you also have to add it to the HTTPS listen.
+
+* You should also make sure it becomes a _catch-all_, so that any hostname for which no conf exists will be caught by this.
+* Return a HTTP 444 code, this is a bit of nginx hack which makes nginx close the connection, freeing up resources.
+* You should probably define this just above the _include my vhosts config_ option in `/etc/nginx/nginx.conf`, this lowers the chances of accidental removal (nobody should be looking in there often)
+
+.Example configuration
+....
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _; # catch-all
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    return 444;
+}
+
+include /etc/nginx/sites-enabled/*; # your vhosts configs
+....
+
+WARNING: The ideal solution would be to have no DNS servers illegitemately pointing at your server in the first place, but there will always be malicious actors who love making you look bad, since doing this will result in a "certificate" not valid, which is of course a good thing security-wise, but makes you look bad from a user-perspective and consumes more resources. 
+
+== Gnome Weirdos
+
+Remember when opening the Application Menu in GNOME and it just appeared, no stupid animations ... yeah I can\'t remember it either 😥, 
+fret not because there are one-liner solutions.
+
+[source, bash]
+----
+gsettings set org.gnome.shell.extensions.dash-to-dock animate-show-apps false # disables only the Application Menu animation
+gsettings set org.gnome.desktop.interface enable-animations false # disables all gnome animations
+----
+
+== Password Generation
+
+.Nearly always available on linux systems
+[source, bash]
+----
+openssl rand 60 | openssl base64 -A
+----
+
+.pwgen, the name says it all
+[source, bash]
+----
+sudo apt install pwgen
+pwgen -n 32 -1 -s
+----
+
+.If you need to be sure there are no weird chars or just love Python
+[source, bash]
+----
+python3
+import secrets
+secrets.token_hex(16) # output 32 chars
+----
+
+== Powershell Environment, $env
+
+[source,powershell]
+----
+[System.Environment]::SetEnvironmentVariable('DB_USER','client',[System.EnvironmentVariableTarget]::User)
+----
+
+== Ansible
+
+[source, bash]
+----
+ansible-playbook play.yml -u vincent -Kb --ask-vault-pass
+----
+
+.playbook.yaml
+[source, yaml]
+----
+---
+#
+# Playbook targeting only the 'web' group
+#
+
+- name: chess webserver config
+  hosts: web
+  tasks:
+  - include_vars: 
+      dir: group_vars/web
+      extensions:
+        - yml
+        - yaml  
+  - name: apt | update
+    apt:
+      update_cache: 'yes'
+      name: '*'
+      state: latest
+
+  - name: apt | fail2ban
+    apt:
+      name: 'fail2ban'
+      state: latest
+      install_recommends: 'yes'
+    notify:
+    - failban | config
+    - start and enable fail2ban
+     
+#  - name: apt | apache2
+#    apt:
+#      name: ['apache2']
+#      state: latest
+#      install_recommends: 'yes'
+#    notify:
+#    - start and enable apache
+#    - ufw | http_port
+#    - ufw | https_port
+      
+#  - name: apt | php
+#    apt: 
+#      name: ['php','php-mysql']
+#      state: latest
+#      install_recommends: 'yes'
+  
+  - name: apt | git
+    apt: 
+      name: git
+      state: latest
+  
+  handlers:
+  - name: start and enable fail2ban
+    service:
+      name: fail2ban
+      state: restart
+      enabled: 'yes'
+  - name: fail2ban | config
+    copy:
+      src: ./files/jail.local
+      dest: /etc/fail2ban/jail.local
+      owner: root
+      group: root
+      mode: '0644'
+  - name: start and enable apache
+    service:
+      name: apache2
+      state: restart
+      enabled: 'yes'
+  - name: ufw | https_port
+    ufw:
+      rule: allow
+      port: '{{ https_port }}'
+      proto: tcp
+  - name: ufw | http_port
+    ufw:
+      rule: allow
+      port: '{{ http_port }}'
+      proto: tcp
+
+#
+# Playbook targeting only the 'db' group
+#
+
+- name: install db requirements
+  hosts: db
+  tasks:
+  - name: apt | python goodies # required for sane install of pip
+    apt:
+      name: ['python3-pip','python3-venv','python3-dev', 'python-pip', 'python-dev']
+      state: latest
+  - name: pip | pymysql
+    pip:
+      name: pymysql
+
+#
+# Playbook targeting both the 'web' and 'db' group
+#
+
+- name: get backups | db | website code
+  hosts: web:db
+  tasks:
+  - include_vars: 
+      dir: group_vars/db
+      extensions:
+        - yml
+        - yaml
+  - name: archive | /var/www 
+    archive:
+      path: /var/www
+      dest: "{{ remote_home }}/web.tgz"
+      force_archive: 'true'
+    notify: 
+    - fetch | archive /var/www
+    - remove | archive
+  
+  - name: mysql | dump
+    mysql_db:
+      state: dump
+      name: wsvdb
+      login_user: "{{ mysql_user }}"
+      login_password: "{{ mysql_password }}"
+      target: "{{ remote_home }}/backupWSVDB.sql"
+    notify: # on success calls the fetch handler to also download and remove the backup file
+    - fetch | mysqldump
+    - remove | mysqldump
+  
+  handlers:
+  - name: fetch | archive /var/www
+    fetch: 
+      src: "{{ remote_home }}/web.tgz"
+      dest: "{{ local_home }}/web.tgz"
+      flat: 'yes'
+  # remove the archive from the web server
+  - name: remove | archive
+    file:
+      path: "{{ remote_home }}/web.tgz"
+      state: absent
+  # downloads the backed up sql dump
+  - name: fetch | mysqldump
+    fetch:
+      src: "{{ remote_home }}/backupWSVDB.sql"
+      dest: "{{ local_home }}/backupWSVDB.sql"
+      flat: 'yes'
+  # removes the mysqldump from the server
+  - name: remove | mysqldump
+    file:
+      path: "{{ remote_home }}/backupWSVDB.sql"
+      state: absent
+----
+
+== MySQL database, DB
+
+== Connection status
+
+[source, sql]
+----
+\s # yes that's it, just this in a `mysql>` shell
+----
+
+=== SSL configuration
+
+[source, bash]
+----
+sudo mysql 
+----
+
+[source, sql]
+----
+SHOW variables LIKE '%ssl%';
+----
+
+....
++---------------+-----------------+
+| Variable_name | Value           |
++---------------+-----------------+
+| have_openssl  | YES             |
+| have_ssl      | YES             |
+| ssl_ca        | ca.pem          |
+| ssl_capath    |                 |
+| ssl_cert      | server-cert.pem |
+| ssl_cipher    |                 |
+| ssl_crl       |                 |
+| ssl_crlpath   |                 |
+| ssl_key       | server-key.pem  |
++---------------+-----------------+
+....
+
+==== Generating SSL/TLS Certificates and Keys
+
+IMPORTANT: This is only required if have_openssl and/or have_ssl are disabled and no cryptographic material like ssl_ca, ssl_cert and ssl_key exist as of yet.
+
+[source, bash]
+----
+sudo mysql_ssl_rsa_setup --uid=mysql # uid=mysql to ensure the files are only readable by the MySQL process
+----
+
+TIP:Modern versions of MySQL look for the appropriate certificate files within the MySQL data directory whenever the server starts. Because of this, you won’t need to modify MySQL’s configuration to enable SSL.
+
+[source, bash]
+----
+systemctl restart mysql
+# dont forget to verify it again via "show variables like '%ssl%';"
+----
+
+==== Configuring Secure Connection for Remote Clients
+
+Disallow unencrypted connections, always require SSL or local Unix socket for the connections.
+
+.open the config file
+[source, bash]
+----
+nano /etc/mysql/my.cnf
+----
+
+.Override any previous settings by putting this at the bottom of the config file
+....
+[mysqld]
+# Require clients to connect either using SSL
+# or through a local socket file
+require_secure_transport = ON
+# listen for external connections (wildcard 0.0.0.0), options are: No IP's, 1 IP or all IP's
+# If you want more than 1 IP but not all, set MySQL to 0.0.0.0 (all)
+# and configure the firewall to only allow through some
+bind-address = 0.0.0.0
+....
+
+Save and close the file!
+
+.apply the new settings
+[source, bash]
+----
+systemctl restart mysql
+----
+
+.verify that mysql is listening on 0.0.0.0
+[source, bash]
+----
+# remove the n option if you want prefer the name of the service
+#instead of just the numerical version (port number), i.e. 'mysql' instead of '3306'
+ss -plunt 
+----
+
+Allow mysql through firewall!
+
+
+
+.RHEL-based systems
+[source, bash]
+----
+# always a good read: https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7
+# verify firewalld is running
+firewall-cmd --state
+# see which zone is the default
+firewall-cmd --get-default-zone
+# verify the current rules
+firewall-cmd --list-all
+# add new rule
+firewall-cmd --zone=public --add-service=mysql
+# verify the new rule
+firewall-cmd --zone=public --list-services
+# apply the new rule permantently (you could also only do this)
+firewall-cmd --zone=public --permanent --add-service=mysql
+# reload the firewall to apply the new rule
+firewall-cmd --reload
+----
+
+.Debian-based systems
+[source, bash]
+----
+ufw allow mysql
+----
+
+== Arch Linux
+
+.install steps
+[source, bash]
+----
+#!/bin/sh
+
+loadkeys be-latin1
+printf "Checking if UEFI mode is enabled"
+ls /sys/firmware/efi/efivars # if the directory exists and has content than UEFI is enabled 
+
+# Connect to the internet
+echo "Checking internet connection"
+ip link
+if ping -c 4 192.168.1.1
+then
+    echo "Internet connection reached router"
+    if ping -c 4 mozilla.org
+    then
+        echo "Internet connection reached mozilla.org"
+    else
+        echo "Internet connection FAILED to reach mozilla.org"
+else
+    echo "Internet connection failed to reach router"
+fi
+
+timedatectl set-ntp true
+timedatectl set-timezone Europe/Brussels
+timedatectl status
+
+echo "Manual intervention required for disk partitioning"
+lsblk # for general overview
+# fdisk /dev/sda
+# m # gives help menu
+# d 
+# 1
+# d 
+# 2
+# make the partitions nice
+# mkfs.fat -F32 /dev/sda1 for boot partition
+# mkswap /dev/sda2 for swap partition
+# swapon /dev/sda2
+# mkfs.ext4 /dev/sda3 for root /
+# mkfs.ext4 /dev/sda4 for /home partition
+
+# mount the partitions
+# first we mount the root partition
+mount /dev/sda3 /mnt
+mkdir /mnt/boot
+mkdir /mnt/home
+mount /dev/sda1 /mnt/boot
+mount /dev/sda4 /mnt/home
+lsblk
+bootstrap your arch install
+pacstrap /mnt base base-devel linux linux-firmware vim nano zsh sudo # installs basic packages onto your hard drive, while you're still running in the USB live environment
+
+genfstab -U /mnt >> /mnt/etc/fstab # this basically tells grub where to find the OS on the hard drive. (oversimplified)
+arch-chroot /mnt # become root on the hard drive, as if you're running Arch on the hard drive (which you kinda are at this point)
+
+echo "lappy" > /etc/hostname
+echo "127.0.0.1     localhost" >> /etc/hosts
+echo "::1           localhost" >> /etc/hosts
+echo "127.0.0.1     lappy.localdomain   lappy" >> /etc/hosts
+
+pacman -S NetworkManager # DO NOT FORGET THIS, I SWEAR THIS CAN BE A REAL PAIN IN THE ASS OTHERWISE
+systemctl enable NetworkManager # has to be capitalized
+pacman -S grub efibootmgr intel-ucode # installs microcode fixes
+
+# grub config
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
+grub-mkconfig -o /boot/grub/grub.cfg
+passwd
+
+# ln -sf /usr/share/zoneinfo/Europe/Brussels /etc/localtime
+# hwclock --systohc
+# locale-gen
+# localectl set-keymap be-latin1
+
+# useradd -m -g wheel -s /usr/bin/zsh slothy
+# passwd slothy
+# edit sudoers file AKA, run 'visudo'
+
+# download and install some fonts
+# pacman -S noto-fonts # lots of fonts through a package
+
+# desktop environments
+pacman -S xfce4 xfce4-goodies xorg-init lightdm
+# pacman -Syu konsole # installs the KDE terminal emulator
+----
+
+
+
+== HTML Horizontal Centering
+
+.html page
+[source, html]
+----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Comrade | OurSite.org</title>
+    <link rel="stylesheet" type="text/css"href="./stylesheets/index.css">
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- 
+        <div>
+            <img class="mb-4" src="/images/logo.webp" alt="" width="auto" height="120">
+        </div>
+        -->
+        <div> 
+            <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+        </div>
+        <form action="/user/login" method="post">
+            <input type="email" name="email" id="email" placeholder="dummy@dummy.com" required>
+            <input type="password" name="password" id="password" required>
+            <input type="submit" value="Login" id="submit-button" class="button">
+        </form>
+    </div>
+</body>
+</html>
+----
+
+.css stylesheet
+[source, css]
+----
+body {
+    background-color: black;
+}
+
+div.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;  
+    justify-content: center;    
+}
+
+h1 {
+    color: whitesmoke;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+div.main-wrapper form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    width: 85%;
+}
+
+div.main-wrapper form p {
+    color: rebeccapurple;
+}
+
+div.main-wrapper form input {
+    margin-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-radius: 0.2rem;
+    width: 100%;
+    background-color: #36393d;
+    color: white;
+}
+
+div.main-wrapper form input.button {
+    background-color: #0a58be;
+    text-align: center;
+    font-size: 16px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+    /* Visual aid to recognize break point */
+    /* body {
+        background-color: purple;
+    } */
+
+    div.main-wrapper form {
+        width: 40%;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    /* Visual aid to recognize break point */
+    /* body {
+        background-color: yellow;
+    } */
+
+    div.main-wrapper form {
+        width: 35%;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    /* Visual aid to recognize break point */
+    /* body {
+        background-color: green;
+    } */
+
+    div.main-wrapper form {
+        width: 30%;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    /* Visual aid to recognize break point */
+    /* body {
+        background-color: red;
+    } */
+
+    div.main-wrapper form {
+        width: 30%;
+    }
+}
+----
+
+
+
+
+
