@@ -5,6 +5,14 @@ Vincent Bockaert <bockaert.vincent1997@gmail.com>
 :icons: font
 :numbered:
 
+== gam commands
+
+[source,bash]
+----
+# add user to group (with member role)
+gam update group <Group Email Address> add member <User Email Address>
+----
+
 == Scripting sweetnees
 
 [source, bash]
@@ -217,6 +225,19 @@ pacman -S xfce4 xfce4-goodies xorg-init lightdm
 ----
 
 == GPG / PGP
+
+=== PGP Messages to stdout / from stdin
+
+[source,bash]
+----
+# -a for armor
+# -o - for to stdout, most commands use '-' for stdout
+# -u for default-key to use when signing
+# -r for recipient
+# -se for sign & encrypt
+# teamviewer_recovery.txt the file which contains our plaintext message
+gpg -a -o - -u bockaert.vincent1997@gmail.com -r bockaert.vincent1997@gmail.com -se teamviewer_recovery.txt
+----
 
 === Generating process
 

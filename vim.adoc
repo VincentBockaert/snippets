@@ -1,0 +1,41 @@
+= VIM Sweeties
+Doc Writer <mail@vincentbockaert.xyz>
+:icons: font
+:source-highlighter: highlightjs
+
+== vim config file
+
+.~/.vimrc
+....
+syntax on " Syntax highlighting
+set showmatch " Shows matching brackets
+set ruler " Always shows location in file (line#)
+set smarttab " Autotabs for certain code
+set shiftwidth=4
+set tabstop=4
+set number
+....
+
+== Open multiple files and tab/switch between them
+
+[source,bash]
+----
+vim file1.txt
+# next command in vim
+# (escape)
+:tabe file2.txt
+:tabn # for next file
+:tabp # to previous file
+----
+
+== Deleting a word/cut a word
+
+....
+(escape) dw
+....
+
+== Delete/Cut a line
+
+....
+(escape) dd
+....

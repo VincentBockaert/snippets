@@ -1,0 +1,29 @@
+= PGP
+Doc Writer <mail@vincentbockaert.xyz>
+:icons: font
+:source-highlighter: highlightjs
+
+== gpg conf file
+
+.~/.gnupg/gpg.conf
+....
+keyserver hkp://zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion
+default-user D5CD2421706646C78A51C50903849FD1B342C859
+....
+
+== Signing keys
+
+.locally sign a key
+[source, bash]
+----
+# to locally sign the key
+gpg -u mail@vincentbockaert.xyz --lsign-key support@brave.com
+----
+
+.sign a key with exportable signature
+[source, bash]
+----
+gpg -u mail@vincentbockaert.xyz --sign-key support@brave.com
+gpg --send-keys support@brave.com
+----
+

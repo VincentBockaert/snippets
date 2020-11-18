@@ -1,0 +1,48 @@
+= GAM Sweeties
+Doc Writer <vincent.bockaert@protonmail.com>
+:icons: font
+
+== View number of licenses
+
+[source, bash]
+----
+gam info domain
+----
+
+.Outputs
+....
+Customer ID: xxxxxxxx
+Primary Domain: XXXXXX
+Customer Creation Time: xxxxxxxxxx xxxxxxxxxx
+Primary Domain Verified: True
+Default Language: en
+Address:
+  contactName: xxxx xxxxxxxxxx
+  organizationName: xxxxxxxx
+  addressLine1: xxxxx xx
+  addressLine2:
+  addressLine3:
+  locality: xxxxx
+  region:
+  postalCode: xxxxx
+  countryCode: xxxxx
+Phone: +32499690571
+Admin Secondary Email: xxxxxxxxx
+User counts as of 2020-10-27:
+  G Suite Basic Licenses: 183
+  G Suite Basic Users: 177
+  G Suite Business Licenses: 806
+  G Suite Business Users: 797
+  Total Users: 974
+....
+
+== add user to group
+
+== gam commands
+
+[source,bash]
+----
+# add user to group (with member role)
+gam update group <Group Email Address> add member <User Email Address>
+----
+
