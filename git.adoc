@@ -1,0 +1,11 @@
+= git sweeties
+Doc Writer <mail@vincentbockaert.xyz>
+:icons: font
+:source-highlighter: highlightjs
+
+== get the remote url(s)
+
+[source,bash]
+----
+git remote show origin
+----
