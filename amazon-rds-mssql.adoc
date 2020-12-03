@@ -1,4 +1,4 @@
-= VIM Sweeties
+= amazon rds mssql 
 Doc Writer <mail@vincentbockaert.xyz>
 :icons: font
 :source-highlighter: highlightjs
