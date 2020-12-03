@@ -75,5 +75,19 @@ SELECT sid FROM sys.syslogins WHERE name = 'oneaelb'
 GO
 ----
 
+.Similarly to sync the other user/login
+[source, sql]
+----
+SELECT sid FROM sys.sysusers WHERE name = 'scanproviewer'
+GO
+SELECT sid FROM sys.syslogins WHERE name = 'scanproviewer'
+GO
+EXEC sp_change_users_login @Action='update_one', @UserNamePattern='scanproviewer',@LoginName='scanproviewer';
+GO
+SELECT sid FROM sys.sysusers WHERE name = 'scanproviewer'
+GO
+SELECT sid FROM sys.syslogins WHERE name = 'scanproviewer'
+GO
+----
 See the image below for the output, you can clearly see that both the user and the login now have the sid that came from the login, the mismatch is gone "hooray".
 image::img/mssql-012-sid-fix.png[align="center"]
