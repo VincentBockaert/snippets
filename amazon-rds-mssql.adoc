@@ -47,8 +47,13 @@ master> quit
 
 == server principal blah blah 
 
-If you restore a db & then added the sql server logins you might run an sync problem between existing users from the restored db.
-And the logins (they can have the same name but if the isn't the same you're toast).
+If you restore a db & then added the sql server logins you might run an sync problem between existing users from the restored db and the logins (they can have the same name but if the isn't the same you're toast).
+
+This might leave you feeling like you should want to choke the SQL Server to death, trust I feel your pain. +
+Luckily I found the bug/problem, nevertheless I still expect your rage to be somewhat like this. +
+_cat = SQL Server_
+
+image::img/when-you-finally-find-the-bug.jpg[align="center"]
 
 The following image shows the problem.
 
@@ -91,3 +96,6 @@ GO
 ----
 See the image below for the output, you can clearly see that both the user and the login now have the sid that came from the login, the mismatch is gone "hooray".
 image::img/mssql-012-sid-fix.png[align="center"]
+
+
+
