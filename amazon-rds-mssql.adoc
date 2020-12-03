@@ -58,3 +58,22 @@ For whatever reason this problem isn't a issue with the super-admin user we crea
 See the image below for how the sid should be:
 
 image::img/mssql-012-superadmin-sid.png[align="center"]
+
+This can luckily be fixed rather easily via:
+
+[source, sql]
+----
+SELECT sid FROM sys.sysusers WHERE name = 'oneaelb'
+GO
+SELECT sid FROM sys.syslogins WHERE name = 'oneaelb'
+GO
+EXEC sp_change_users_login @Action='update_one', @UserNamePattern='oneaelb',@LoginName='oneaelb';
+GO
+SELECT sid FROM sys.sysusers WHERE name = 'oneaelb'
+GO
+SELECT sid FROM sys.syslogins WHERE name = 'oneaelb'
+GO
+----
+
+See the image below for the output, you can clearly see that both the user and the login now have the sid that came from the login, the mismatch is gone "hooray".
+image::img/mssql-012-sid-fix.png[align="center"]
