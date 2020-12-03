@@ -1,0 +1,10 @@
+= Development Goodies
+Vincent Bockaert <bockaert.vincent1997@gmail.com>
+:numbered:
+:source-highlighter: highlight.js
+:icons: font
+:numbered:
+
+= snippets
+
+Snippets, "hacks" and other tidbits that are usefull.

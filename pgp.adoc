@@ -5,10 +5,28 @@ Doc Writer <mail@vincentbockaert.xyz>
 
 == gpg conf file
 
-.~/.gnupg/gpg.conf
+`vim ~/.gnupg/gpg.conf`
+
 ....
+# uses the keys.openpgp.org, which has email verification built in, debian considers this a better a option and I have to agree
+# it's very easy to verify someone's key through this
+# best case scenario is still a face-to-face meet of course, but COVID-19 but an end to such ideas
 keyserver hkp://zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion
-default-user D5CD2421706646C78A51C50903849FD1B342C859
+default-key D5CD2421706646C78A51C50903849FD1B342C859
+
+# GPG will only select an algorithm that is usable by all recipients.  
+# The most highly ranked digest algorithm
+# in this list is also used when signing without encryption (e.g. --clear-sign or --sign).
+personal-digest-preferences SHA512 SHA384 SHA256 SHA224
+
+# GPG will only select an algorithm that is usable by all recipients.  
+# The most highly ranked cipher in this list is also used for the --symmetric encryption command.
+personal-cipher-preferences AES256 AES192 AES
+
+# gpg won't run if secure memory can't be used
+require-secmem
+with-fingerprint
+with-subkey-fingerprint
 ....
 
 == Signing keys
@@ -26,4 +44,15 @@ gpg -u mail@vincentbockaert.xyz --lsign-key support@brave.com
 gpg -u mail@vincentbockaert.xyz --sign-key support@brave.com
 gpg --send-keys support@brave.com
 ----
+
+== When is a primary key actually needed?
+
+* when you sign someone else's key or revoke an existing signature,
+* when you add a new UID or mark an existing UID as primary,
+* when you create a new subkey,
+* when you revoke an existing UID or subkey,
+* when you change the preferences (e.g., with setpref) on a UID,
+* when you change the expiration date on your master key or any of its subkey, or
+* when you revoke or generate a revocation certificate for the complete key. 
+
 
