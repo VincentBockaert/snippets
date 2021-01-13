@@ -1,0 +1,56 @@
+= gnome-boxes
+Doc Writer <mail@vincentbockaert.xyz>
+:icons: font
+:source-highlighter: highlightjs
+:toc:
+
+If you love open-source, dislike Oracle, dislike how VirtualBox breaks your Linux kernel every now and then with it kernel modules, dislike the non-commercial enforcement for VirtualBox from Oracle. + Then worry no more, gnome-boxes is here. This is a fully open-source project from the Gnome Project and supported by Red Hat & the Fedora community.
+Most importantly, it's included and supported on most linux distros, unlike VirtualBox which as a example is in the multiverse for Ubuntu (thus not officially supported and not even free).
+
+== Installation
+
+.debian-based systems
+[source, bash]
+----
+sudo apt-get install gnome-boxes
+----
+
+.rhel-based systems
+[source, bash]
+----
+sudo dnf install gnome-boxes
+# I'm not sure that this works on all systems ...
+# Never the less ... it should be pretty easy, maybe enabling a repo like epel-release
+# Alternatively you can install it via flatpak
+----
+
+== Migrate from VirtualBox
+
+In gnome-boxes > Create New > from ISO file > select the vdi file from your previous VirtualBox machine.
+It will import it...
+
+I don't really know why gnome-boxes doesn't advertise this more.
+As it is now, you have to be playing/fooling around or just magically know that gnome-boxes is smart enough to recognize that this is a vdi that can be imported.
+
+=== Post-migration
+
+Check for the new image created by gnome-boxes under +
+`~/.local/share/gnome-boxes/images`
+Should be similar in size to the vdi from virtualbox.
+
+Check if the VM is doing okay, works the same way.
+
+Remove the virtualbox-guest-tools.
+
+Install the https://www.spice-space.org/download.html[spice-space] guest tools as recommended by gnome-boxes. +
+PS: this software comes from Red Hat, so once again just like gnome-boxes fully open source & FREE baby.
+
+After the installation and maybe a reboot, you can copy and paste again thanks to the shared clipboard.
+You can also drag and drop files (but this should have already worked without the _spice-space tools_.
+
+== Backing up / moving gnome-boxes between hosts
+
+.Simply copy over the following to the new host:
+* `~/.local/share/gnome-boxes/images`
+* `~/.config/libvirt`
+* `~/.config/gnome-boxes`
