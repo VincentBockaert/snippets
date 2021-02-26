@@ -30,20 +30,47 @@ You require a "option group" with the SQLSERVER_BACKUP_RESTORE option for the sq
 For Onea this is backup-to-s3.
 You also require a S3 bucket linked to this option-group.
 
-[source,sql]
-....
-master> sp_databases;                                                                                                                                                                                      
-Time: 0.453s
-master> EXEC msdb.dbo.rds_backup_database                                                                                                                                                                  
-Time: 0.252s
-master> EXEC msdb.dbo.rds_backup_database 
-....... @source_db_name='UPCONSTRUCT_TEST', 
-....... @s3_arn_to_backup_to='arn:aws:s3:::mssql-backups.onea.be/upconstruct-test-20201203.sql', 
-....... @overwrite_S3_backup_file=1; 
-.......                                                                                                                                                                                                    
-Time: 0.503s
-master> quit
-....
+.backup the database
+[source, sql]
+----
+sp_databases;
+go
+USE UPCONSTRUCT_PROD;
+go
+exec msdb.dbo.rds_backup_database 
+    @source_db_name='UPCONSTRUCT_PROD', 
+    @s3_arn_to_backup_to='arn:aws:s3:::mssql-backups.onea.be/UPCONSTRUCT_PROD_MIGR_BACKUP_20201210.sql',
+    @overwrite_S3_backup_file=1;
+go
+----
+
+.view db backup status
+[source, sql]
+----
+exec msdb.dbo.rds_task_status @db_name='UPCONSTRUCT_PROD';
+go
+----
+
+.take database offline
+[source, sql]
+----
+USE master;
+GO
+ALTER DATABASE [database_name]
+SET OFFLINE;
+GO
+----
+
+.connect to the other sql-server & restore the backed up database
+[source, sql]
+----
+USE master;
+GO
+exec msdb.dbo.rds_restore_database 
+    @restore_db_name='UPCONSTRUCT_PROD', 
+    @s3_arn_to_restore_from='arn:aws:s3:::mssql-backups.onea.be/UPCONSTRUCT_PROD_MIGR_BACKUP_20201210.sql';
+go
+----
 
 == server principal blah blah 
 
