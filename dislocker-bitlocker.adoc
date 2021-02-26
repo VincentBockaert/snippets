@@ -1,0 +1,24 @@
+= Dislocker - BitLocker for Linux (community client)
+Doc Writer <bockaert.vincent1997@gmail.com>
+:icons: font
+:source-highlighter: highlightjs
+
+.ensure the filesystem is support for read AND WRITE
+[source, bash]
+----
+sudo apt install ntfs-3g exfat-fuse
+----
+
+
+.create the mount folder
+[source, bash]
+----
+sudo mkdir -p /media/bitlocker
+sudo mkdir -p /media/bitlockermount
+----
+
+[source,bash]
+----
+sudo dislocker -V /dev/sdc1 -p -- /media/bitlocker
+mount /media/bitlocker/dislocker-file /media/bitlockermedia
+----
