@@ -1,0 +1,27 @@
+
+.change gnome desktop background color
+[source, bash]
+----
+gsettings set org.gnome.desktop.background primary-color "#FFFFFF"
+gsettings set org.gnome.desktop.background secondary-color "#FFFFFF"
+gsettings set org.gnome.desktop.background color-shading-type "solid"
+----
+
+
+.disable and enable gnome touchpad
+[source, bash]
+----
+#!/bin/bash
+
+ON_OFF=$1
+
+if [ "$ON_OFF" = "on" ]
+then
+  gsettings set org.gnome.desktop.peripherals.touchpad send-events enabled
+elif [ "$ON_OFF" = "off" ] 
+then
+  gsettings set org.gnome.desktop.peripherals.touchpad send-events disabled
+else
+  echo "Unrecognized option, please use 'touchpad on/off'"
+fi
+----
